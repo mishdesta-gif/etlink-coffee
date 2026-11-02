@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+@theme {
+  --color-forest: #174B3A;
+  --color-deep-green: #102C24;
+  --color-gold: #C99A50;
+  --color-ivory: #F2E8D2;
+  --font-sans: "Inter Variable", Arial, sans-serif;
+  --font-display: "Playfair Display Variable", Georgia, serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 2rem;
+}
+
+body {
+  background: var(--color-ivory);
+  color: var(--color-deep-green);
+}
+
+::selection {
+  background: var(--color-gold);
+  color: var(--color-deep-green);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-gold);
+  outline-offset: 5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
