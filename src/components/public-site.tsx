@@ -1,0 +1,12 @@
+import Link from "next/link";
+import type { ReactNode } from "react";
+export function Eyebrow({ children }: { children: ReactNode }) { return <p className="eyebrow">{children}</p>; }
+export function Actions() { return <div className="actions"><Link href="/for-buyers" className="button">Buy Ethiopian Coffee <span aria-hidden="true">↗</span></Link><Link href="/for-suppliers" className="button button-outline">Supply Ethiopian Coffee <span aria-hidden="true">↗</span></Link></div>; }
+export function PageIntro({ label, title, children }: { label: string; title: string; children: ReactNode }) { return <section className="page-intro"><div className="container"><Eyebrow>{label}</Eyebrow><h1>{title}</h1><div className="intro-copy">{children}</div></div></section>; }
+export function ContactCta() { return <section className="contact-cta"><div className="container cta-inner"><div><Eyebrow>A conversation is the beginning</Eyebrow><h2>Let’s find your next<br /><em>coffee connection.</em></h2></div><Link className="button" href="/contact">Talk to ET Link <span aria-hidden="true">↗</span></Link></div></section>; }
+export const safeguards = [
+  ["Private by design", "Coffee offers and negotiated prices stay private. Buyer and supplier identities are shared only at approved stages."],
+  ["Reviewed by people", "ET Link manually reviews business information and requests, then coordinates suitable introductions. There is no automatic matching."],
+  ["Clear before commitment", "Commercial terms and commissions are confirmed before a deal progresses. Accepting a sample does not reserve stock."]
+];
+export function Safeguards() { return <section className="section safeguard-section"><div className="container"><Eyebrow>A considered approach to trade</Eyebrow><h2>Trust is built into the process.</h2><div className="three-grid">{safeguards.map(([title, copy], i) => <article className="line-card" key={title}><span className="index">0{i + 1}</span><h3>{title}</h3><p>{copy}</p></article>)}</div><p className="fine-print">ET Link acts as a verified intermediary. It is not an escrow service, payment processor, or exporter of record. Verification is a review process, not a guarantee of performance.</p></div></section>; }

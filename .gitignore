@@ -8,3 +8,13 @@ coverage/
 .vercel/
 .DS_Store
 npm-debug.log*
+review/phase1-baseline/**/*.bak
+review/phase1-baseline/git-diff.patch
+review/pre-phase1/
+review/phase1-hardening-baseline/**/*.bak
+test-results/
+playwright-report/
+.cache/
+supabase/.temp/
+review/phase1-remediation-baseline/**/*.bak
+review/phase1-auth-simplification-baseline/**/*.bak

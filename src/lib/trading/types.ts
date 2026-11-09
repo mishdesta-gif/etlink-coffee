@@ -1,0 +1,10 @@
+export type TradePayload=Record<string,string|number>;
+export type TradeRecord={id:string;reference:string;business_id:string;status:string;revision:number;payload:TradePayload;reason:string|null;created_at:string};
+export type TradeHistory={id:string;record_id:string;revision:number;status:string;reason:string|null;created_at:string};
+export type Match={id:string;reference:string;request_id:string;lot_id:string;buyer_business_id:string;supplier_business_id:string;reason:string;current:boolean};
+export type Commission={id:string;reference:string;match_id?:string;business_id?:string;version:number;calculation:string;amount:number;basis:string;currency:string;earning_trigger:string;effective_from:string;expires_at:string;accepted:boolean};
+export type Offer={id:string;reference:string;match_id?:string;business_id?:string;version:number;payload:TradePayload;valid_until:string;response?:{response:string;counter_payload:TradePayload|null;created_at:string}|null};
+export type OfferResponse={id:string;offer_id:string;version:number;response:string;counter_payload:TradePayload|null;created_at:string};
+export type Commercial={matches?:Match[];commissions:Commission[];offers:Offer[];responses?:OfferResponse[]};
+export const tradingPermissions=['trading.requests.review','trading.lots.review','trading.matches.manage','trading.offers.issue','trading.commissions.manage'] as const;
+export const origins=['Yirgacheffe','Sidama','Guji','Harrar','Jimma','Limu','Nekemte/Wollega','Kaffa','Bench Maji','Bale','Other Ethiopian origin'] as const;

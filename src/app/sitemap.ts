@@ -1,0 +1,2 @@
+import type { MetadataRoute } from "next";
+export default function sitemap(): MetadataRoute.Sitemap { return ["", "/about", "/how-it-works", "/for-buyers", "/for-suppliers", "/coffee-origins", "/contact"].map(path => ({ url: "https://etlinkcoffee.com" + path, changeFrequency: "monthly" as const, priority: path === "" ? 1 : .7 })); }

@@ -1,0 +1,2 @@
+import Link from 'next/link';import {tradingAvailable} from '@/lib/trading/config';
+export function TradingNavigation(){if(!tradingAvailable())return null;return <nav className="foundation-nav" aria-label="Trading workspace"><Link href="/portal/trading/requests">My purchase requests</Link><Link href="/portal/trading/lots">My private coffee lots</Link><Link href="/portal/trading/offers">Private commercial offers</Link><Link href="/portal/trading/commissions">Commission terms</Link></nav>;}

@@ -1,44 +1,13 @@
-const principles = [
-  { number: "01", title: "Rooted in origin", description: "Ethiopia’s coffee heritage is the starting point for everything we are building." },
-  { number: "02", title: "Built for connection", description: "Our purpose is to bring people and businesses in the coffee community closer together." },
-  { number: "03", title: "Growing with intention", description: "We are laying the groundwork for a thoughtful approach to coffee trade." },
-];
-
+import Image from "next/image";
+import Link from "next/link";
+import { Actions, ContactCta, Eyebrow, Safeguards } from "@/components/public-site";
 export default function HomePage() {
-  return (
-    <>
-      <section aria-labelledby="hero-title" className="relative overflow-hidden bg-forest text-ivory">
-        <div aria-hidden="true" className="pointer-events-none absolute -top-24 -right-28 size-96 rounded-full border border-gold/30 sm:size-[36rem]" />
-        <div aria-hidden="true" className="pointer-events-none absolute right-0 bottom-[-15rem] size-96 rounded-full border border-gold/20" />
-        <div className="relative mx-auto max-w-7xl px-6 py-24 sm:px-10 sm:py-32 lg:py-40">
-          <p className="text-xs font-medium tracking-[0.24em] text-gold uppercase">From Ethiopia. For connection.</p>
-          <h1 id="hero-title" className="mt-7 max-w-4xl font-display text-5xl leading-[1.1] sm:text-7xl lg:text-8xl">Great coffee begins<br className="hidden sm:block" /> with strong roots.</h1>
-          <p className="mt-8 max-w-xl text-base leading-8 text-ivory/85 sm:text-lg">We’re building ET Link Coffee to connect Ethiopian coffee with the people and businesses who value its origins.</p>
-          <a href="#our-purpose" className="mt-10 inline-flex items-center gap-6 rounded-sm bg-gold px-6 py-4 text-sm font-semibold text-deep-green transition-colors hover:bg-ivory">Discover our purpose <span aria-hidden="true">↗</span></a>
-          <p className="mt-10 text-xs tracking-wider text-ivory/70">Our journey is just beginning. Platform in development.</p>
-        </div>
-      </section>
-      <section id="our-purpose" aria-labelledby="purpose-title" className="mx-auto grid max-w-7xl gap-8 px-6 py-20 sm:px-10 sm:py-28 md:grid-cols-2 md:gap-16">
-        <p className="text-xs font-semibold tracking-[0.22em] text-forest uppercase">Our purpose</p>
-        <div>
-          <h2 id="purpose-title" className="font-display text-4xl leading-tight sm:text-5xl">An enduring heritage.<br />A new connection.</h2>
-          <p className="mt-6 max-w-xl leading-8 text-deep-green/80">Coffee is a shared language, rooted in place and carried through generations. ET Link Coffee is taking its first steps toward a platform for Ethiopian coffee trade and business matching.</p>
-        </div>
-      </section>
-      <section id="our-foundation" aria-labelledby="foundation-title" className="border-t border-forest/20">
-        <div className="mx-auto max-w-7xl px-6 py-20 sm:px-10">
-          <h2 id="foundation-title" className="font-display text-3xl sm:text-4xl">The foundation we’re building on</h2>
-          <div className="mt-10 grid gap-10 md:grid-cols-3">
-            {principles.map((principle) => (
-              <article key={principle.number} className="border-t border-forest/25 pt-6">
-                <span className="text-sm font-medium text-forest">{principle.number}</span>
-                <h3 className="mt-5 font-display text-2xl">{principle.title}</h3>
-                <p className="mt-3 max-w-sm text-sm leading-7 text-deep-green/80">{principle.description}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-    </>
-  );
+return <>
+    <section className="hero"><div className="container hero-grid"><div className="hero-copy"><Eyebrow>Rooted in Ethiopia. Reaching the world.</Eyebrow><h1>Exceptional origins.<br /><em>Meaningful connections.</em></h1><p>Connecting Ethiopian coffee suppliers and exporters with domestic and international buyers through a private, personally guided trade process.</p><Actions /><div className="hero-caption"><span className="gold-rule" />Ethiopian Coffee. Connected Globally.</div></div><div className="hero-art"><Image src="/brand/coffee-cherries.webp" alt="Red coffee cherries on a leafy branch against highland scenery, from the approved brand board" fill preload sizes="(max-width: 760px) 100vw, 45vw" /><div className="image-caption"><span>THE START OF EVERY CONNECTION</span><strong>Always, the origin.</strong></div><div className="origin-seal"><Image src="/brand/orbital-bean.webp" width={58} height={58} alt="" /><span>ETHIOPIA<br />TO THE WORLD</span></div></div></div></section>
+    <div className="principles-strip"><div className="container"><span>ETHIOPIAN ORIGINS</span><span>BUSINESS VERIFICATION</span><span>PRIVATE OPPORTUNITIES</span><span>PERSONAL MATCHING</span></div></div>
+    <section className="section"><div className="container editorial-grid"><div><Eyebrow>The ET Link approach</Eyebrow><h2>A stronger connection<br />between <em>origin and opportunity.</em></h2></div><div><p className="lead">Great coffee deserves a thoughtful path to market.</p><p>ET Link Coffee is an Ethiopian coffee trade intermediary based in Addis Ababa. We help buyers communicate what they need and suppliers present what they can offer, with people guiding each introduction.</p><Link className="text-link" href="/about">Meet ET Link ↗</Link></div></div></section>
+    <section className="journeys section"><div className="container"><Eyebrow>Two journeys. One connection.</Eyebrow><h2>Where would you like to begin?</h2><div className="two-grid"><article className="journey-card"><span className="index">01 / FOR BUYERS</span><h3>Find coffee with<br /><em>a sense of place.</em></h3><p>For international importers, domestic buyers, and Ethiopian exporters purchasing coffee. Tell us your origin, quality, volume, and delivery requirements.</p><Link className="text-link" href="/for-buyers">Buy Ethiopian Coffee ↗</Link></article><article className="journey-card supplier-card"><span className="index">02 / FOR SUPPLIERS</span><h3>Bring your coffee<br /><em>to new conversations.</em></h3><p>For Ethiopian farmers, cooperatives, traders, and licensed exporters offering coffee. Share your business details and available coffee for review.</p><Link className="text-link" href="/for-suppliers">Supply Ethiopian Coffee ↗</Link></article></div><p className="fine-print">Ethiopian exporters can participate as buyers or suppliers, depending on whether they are purchasing or offering coffee in a particular transaction.</p></div></section>
+    <section className="section"><div className="container origin-feature"><div className="brand-panel"><Image src="/brand/brand-signature.webp" alt="ET Link gold orbital coffee logo and Ethiopian Coffee. Connected Globally. tagline on forest green" width={900} height={900} sizes="(max-width: 760px) 100vw, 40vw" /></div><div><Eyebrow>A country of remarkable coffees</Eyebrow><h2>Many origins.<br /><em>Distinct possibilities.</em></h2><p>Explore the celebrated coffee-growing regions of Ethiopia. Origin starts the conversation; the individual lot, processing method, and sample bring its character into focus.</p><div className="origin-names"><span>Yirgacheffe</span><span>Sidama</span><span>Harrar</span><span>Limu</span></div><Link className="text-link" href="/coffee-origins">Explore coffee origins ↗</Link></div></div></section>
+    <Safeguards /><ContactCta />
+  </>;
 }
