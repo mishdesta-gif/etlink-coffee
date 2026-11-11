@@ -28,7 +28,7 @@ jobs:
     env:
       NEXT_TELEMETRY_DISABLED: '1'
       NEXT_PUBLIC_SUPABASE_URL: https://fzgnepvhwhvxukuyubzk.supabase.co
-      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
       ETLINK_APP_URL: https://etlinkcoffee.com
       ETLINK_AUTH_PROVIDER_PROTECTION_REVIEWED: 'true'
       ETLINK_PHASE2_ENABLED: 'true'
