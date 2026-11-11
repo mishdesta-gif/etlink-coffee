@@ -1,0 +1,7 @@
+export type Sample = { id:string;reference:string;quantity_grams:number;status:string;revision:number;buyer?:boolean;match_id?:string;carrier?:string;tracking_reference?:string };
+export type Allocation = { id:string;reference:string;quantity_kg:number;status:string;revision:number;match_id?:string;reservation_status?:string|null;reserved_until?:string|null;reserved_kg?:number };
+export type Reservation = { id:string;reference:string;allocation_id:string;status:string;revision:number;expires_at:string;expired:boolean };
+export type Deal = { id:string;reference:string;status:string;revision:number;reservation_id?:string;quantity_kg?:number;price?:string;currency?:string;terms_confirmed?:boolean;delivery_confirmed?:boolean;buyer_confirmed?:boolean;supplier_confirmed?:boolean;contract_reference?:string;delivery_reference?:string };
+export type CommissionFee = { id:string;reference:string;amount:string;paid:string;currency:string;earned_at:string;business_id?:string;deal_id?:string };
+export type StockBalance = { id:string;reference:string;declared_kg:number;allocated_kg:number;reserved_kg:number;fulfilled_kg:number;available_kg:number };
+export type Operations = { samples:Sample[];allocations:Allocation[];reservations?:Reservation[];deals:Deal[];fees:CommissionFee[];stock:StockBalance[];history?:{id:number;entity:string;object_id:string;revision:number;status:string;created_at:string}[] };

@@ -42,3 +42,24 @@ test('mobile menu and keyboard skip navigation still work',async({page})=>{
   await page.keyboard.press('Tab');await expect(page.getByText('Skip to content')).toBeFocused();
   const button=page.locator('.menu-toggle');await button.click();await expect(button).toHaveAttribute('aria-expanded','true');await page.keyboard.press('Escape');await expect(button).toHaveAttribute('aria-expanded','false');await expect(button).toBeFocused();
 });
+
+test('guest account actions are visible across widths and audience registration links work', async ({page}) => {
+  for (const width of [320, 375, 768, 1024, 1199, 1200, 1440]) {
+    await page.setViewportSize({width,height:812});
+    const response = await page.goto('/');
+    const header = page.getByRole('banner');
+    await expect(header.getByRole('link',{name:'Sign In',exact:true})).toBeInViewport();
+    await expect(header.getByRole('link',{name:'Register',exact:true})).toBeInViewport();
+    await expect(header.getByRole('navigation',{name:'Main navigation'})).toBeVisible({visible:width>=1200});
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+    expect(response?.headers()['cache-control']).toContain('no-store');
+    expect(response?.headers()['x-robots-tag']).toBeUndefined();
+    await page.evaluate(()=>window.scrollTo({top:500,behavior:'instant'}));
+    expect((await header.boundingBox())?.y).toBe(0);
+  }
+  for (const [route,label] of [['/for-buyers','Register as a buyer'],['/for-suppliers','Register as a supplier or exporter']]) {
+    await page.goto(route);
+    await page.getByRole('link',{name:label}).click();
+    await expect(page).toHaveURL('/auth/register');
+  }
+});

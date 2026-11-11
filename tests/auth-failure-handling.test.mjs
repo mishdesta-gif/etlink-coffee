@@ -5,9 +5,10 @@ import vm from 'node:vm';
 import ts from 'typescript';
 import * as validation from '../src/lib/foundation/validation.ts';
 
-function actions({logoutError=null,updateError=null}={}){
+function actions({logoutError=null,updateError=null,userError=null}={}){
  const scopes=[];
- const db={auth:{updateUser:async()=>({error:updateError}),signOut:async options=>{scopes.push(options?.scope);return {error:logoutError};}}};
+ let updates=0;
+ const db={auth:{getUser:async()=>({data:{user:userError?null:{email_confirmed_at:'synthetic-confirmed'}},error:userError}),updateUser:async()=>{updates++;return {error:updateError};},signOut:async options=>{scopes.push(options?.scope);return {error:logoutError};}}};
  const exports={};
  const modules={
   'next/navigation':{redirect:path=>{throw Object.assign(new Error('Synthetic redirect'),{destination:path});}},
@@ -17,7 +18,7 @@ function actions({logoutError=null,updateError=null}={}){
  };
  const source=ts.transpileModule(fs.readFileSync('src/app/auth/actions.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
  vm.runInNewContext(source,{exports,process:{env:{}},require:name=>{assert.ok(Object.hasOwn(modules,name),'Unexpected action dependency');return modules[name];},Buffer});
- return {actions:exports,scopes};
+ return {actions:exports,scopes,updates:()=>updates};
 }
 function resetForm(){const form=new FormData();form.set('mode','reset');form.set('password','Synthetic-new-password-456!');return form;}
 
@@ -37,6 +38,14 @@ test('failed password update does not claim a changed password or attempt sessio
 test('successful password reset still retires global sessions before reporting success',async()=>{
  const fixture=actions();const state=await fixture.actions.authenticate({},resetForm());
  assert.equal(state.ok,true);assert.match(state.message,/Sign in again/);assert.deepEqual(fixture.scopes,['global']);
+});
+test('repeating password setup after session retirement prompts sign-in without updating the password',async()=>{
+ const fixture=actions({userError:{name:'AuthSessionMissingError',status:400}});
+ const state=await fixture.actions.authenticate({},resetForm());
+ assert.equal(state.ok,false);
+ assert.match(state.message,/session has ended.*sign in/i);
+ assert.equal(fixture.updates(),0);
+ assert.deepEqual(fixture.scopes,[]);
 });
 test('logout failure redirects to a generic visible warning instead of an unqualified success',async()=>{
  const fixture=actions({logoutError:{message:'Synthetic private provider detail'}});

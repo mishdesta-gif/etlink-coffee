@@ -20,7 +20,12 @@ export async function proxy(request: NextRequest) {
     await db.auth.getUser();
   }
   response.headers.set('Cache-Control', 'private, no-store, max-age=0');
-  response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+  if (/^\/(?:portal|admin|auth|api\/documents)(?:\/|$)/.test(request.nextUrl.pathname)) {
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+  }
   return response;
 }
-export const config = { matcher: ['/portal/:path*','/admin/:path*','/auth/:path*','/api/documents/:path*'] };
+export const config = {
+  matcher: ['/', '/for-buyers', '/for-suppliers', '/coffee-origins', '/how-it-works', '/about', '/contact',
+    '/portal/:path*', '/admin/:path*', '/auth/:path*', '/api/documents/:path*'],
+};

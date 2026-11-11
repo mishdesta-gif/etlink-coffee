@@ -44,5 +44,6 @@ let clientFiles=0;
 function scanClient(dir){if(!fs.existsSync(dir))return;for(const item of fs.readdirSync(dir,{withFileTypes:true})){const file=path.join(dir,item.name);if(item.isDirectory())scanClient(file);else if(/\.(?:js|map|json)$/.test(file)){clientFiles++;const source=fs.readFileSync(file,'utf8');const values=['sb_secret_synthetic_local_validator',...serverSecrets];if(values.some(v=>source.includes(v)))findings.push({file,type:'server-only credential in browser artifact'});}}}
 scanClient('.next/static');
 const report={scope:'Offline heuristic scan; no matching credential values are printed',trackedEnvironmentFiles:trackedEnv,environmentChecks,browserArtifactsScanned:clientFiles,findings};
+fs.mkdirSync('review',{recursive:true});
 fs.writeFileSync('review/phase1-credential-check.json',JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify(report,null,2));if(findings.length)process.exitCode=1;

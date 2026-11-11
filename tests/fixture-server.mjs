@@ -4,9 +4,13 @@ import http from 'node:http';
 import { randomUUID,randomBytes,createHmac,createHash } from 'node:crypto';
 import { database,asUser,ids,seedUsers } from './database.mjs';
 import {tradingDatabase} from './trading-database.mjs';
+import {seedLocalMarketplace} from './helpers/local-marketplace-demo.mjs';
+import {preparePrivateQuotes} from './helpers/fulfillment-fixture.mjs';
 const inquiryOnly=process.env.ETLINK_INQUIRY_VALIDATION_ONLY==='true';
 const foundationJourneys=process.env.ETLINK_PHASE1_JOURNEYS==='true';
 const tradingOnly=process.env.ETLINK_PHASE2_FIXTURE==='true';
+const localDemo=process.env.ETLINK_LOCAL_MVP_DEMO==='true';
+if(localDemo&&(!tradingOnly||process.env.NEXT_PUBLIC_SUPABASE_URL!=='http://127.0.0.1:54329'||process.env.ETLINK_SYNTHETIC_TEST_MODE!=='true'))throw new Error('Local demo requires the isolated loopback trading fixture');
 const tradingScenario=tradingOnly?process.env.ETLINK_TRADING_SCENARIO||'international':'international';
 if(tradingOnly&&inquiryOnly)throw new Error('Fixture modes must be isolated');
 const db=tradingOnly?await tradingDatabase():await database();
@@ -24,8 +28,15 @@ await db.exec('reset role');
 if(inquiryOnly)await db.query("insert into public.staff_grants(user_id,permission) values($1,'verification.review'),($2,'inquiry.manage')",[ids.reviewer,ids.support]);
 else await db.query("insert into public.staff_grants(user_id,permission) values($1,'verification.review'),($2,'inquiry.manage'),($3,'staff.manage'),($3,'audit.read')",[ids.reviewer,ids.support,ids.manager]);
 if(tradingOnly)await db.query("insert into public.staff_grants(user_id,permission) select $1,unnest(array['trading.requests.review','trading.lots.review','trading.matches.manage','trading.offers.issue','trading.commissions.manage'])",[ids.reviewer]);
+if(localDemo){
+ const records=await seedLocalMarketplace(db,importer,supplier);
+ const quotes=await preparePrivateQuotes(db,{buyer:importer,supplier,...records});
+ await asUser(db,ids.alice);await db.query('select public.request_coffee_sample($1,1,$2,300)',[quotes.buyerOffer,randomUUID()]);await db.exec('reset role');
+}
 let emailRequests=0;
 const recoveryLinks=new Map();let recoveryVerifications=0;
+let inviteVerifications=0;
+const inviteHashes=new Set(['a'.repeat(56)]);
 const publicUser=u=>Object.fromEntries(Object.entries(u).filter(([k])=>!['password','challenge'].includes(k)));
 async function token(u,aal='aal1'){
   const sessionId=randomUUID();
@@ -60,7 +71,17 @@ const server=http.createServer((request,response)=>{
         return send(200,{confirmationUrl:destination.href});
       }
       if(foundationJourneys&&url.pathname==='/_fixture/recovery-stats')return send(200,{recoveryVerifications});
-      if(foundationJourneys&&url.pathname==='/auth/v1/verify'){
+      if(foundationJourneys&&url.pathname==='/_fixture/invite-stats')return send(200,{inviteVerifications});
+      if(foundationJourneys&&url.pathname==='/auth/v1/verify'&&request.method==='POST'){
+        inviteVerifications++;
+        if(body.type!=='invite'||!inviteHashes.delete(body.token_hash))return send(403,{msg:'Synthetic invitation expired',code:'otp_expired'});
+        const u=accounts.get('unconfirmed@example.test');
+        u.email_confirmed_at=new Date().toISOString();
+        await db.exec('reset role');
+        await db.query('update auth.users set email_confirmed_at=now() where id=$1',[u.id]);
+        return send(200,await token(u));
+      }
+      if(foundationJourneys&&url.pathname==='/auth/v1/verify'&&request.method==='GET'){
         recoveryVerifications++;const hash=url.searchParams.get('token'),pending=recoveryLinks.get(hash);recoveryLinks.delete(hash);
         const destination=new URL('http://127.0.0.1:3102/auth/callback?next=reset');
         if(pending&&!pending.expired){const code=randomBytes(24).toString('hex');codes.set(code,{u:pending.u,challenge:pending.challenge});destination.searchParams.set('code',code);}

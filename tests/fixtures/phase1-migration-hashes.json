@@ -1,0 +1,22 @@
+[
+  {
+    "path": "supabase/migrations/202611030001_foundation.sql",
+    "sha256": "a4beed79e7f4d638d16a97ad96d86a9b75d62c698fd8c9402e4837855e64a957"
+  },
+  {
+    "path": "supabase/migrations/202611030002_notification_jobs.sql",
+    "sha256": "3db47636d093b60473cb40ece6de45f5f6d668f9083cddab786d2d139749c7df"
+  },
+  {
+    "path": "supabase/migrations/202611030003_document_lifecycle.sql",
+    "sha256": "dd47de2cf6ada5afc7b092821628f9d16fcb4bbc46b00b292992356edef576cf"
+  },
+  {
+    "path": "supabase/migrations/202611030004_verification_history.sql",
+    "sha256": "889dcea742978940ece76539dd3f8699fb966fbdd7a77b32eec8c655eee56203"
+  },
+  {
+    "path": "supabase/migrations/20261104100651_phase1_auth_compatibility.sql",
+    "sha256": "6f0eb49ac9afa0c1706f4bc8305ba5fc9daa610add42a857b43e770ce0ebea17"
+  }
+]

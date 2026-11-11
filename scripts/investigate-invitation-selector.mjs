@@ -47,4 +47,4 @@ try{
  if(locators.length===1){const currentLocator=vm.runInNewContext(locators[0],{b:{page}});result.runnerLocatorMatches=await currentLocator.count();await currentLocator.selectOption('viewer',{timeout:1000});result.runnerSelectedViewer=await page.locator('select[name="role"]').inputValue()==='viewer';}
  result.confirmed=result.exactLabelMatches===0&&result.nonExactLabelMatches===1&&result.originalSelector==='TimeoutError'&&result.proposedLocatorSelectedViewer&&actionCalls===0&&attemptedNetwork===0;
  if(!result.confirmed)process.exitCode=1;
-}finally{if(browser)await browser.close();fs.writeFileSync('review/phase1-invitation-selector-investigation.json',JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result,null,2));}
+}finally{if(browser)await browser.close();fs.mkdirSync('review',{recursive:true});fs.writeFileSync('review/phase1-invitation-selector-investigation.json',JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result,null,2));}

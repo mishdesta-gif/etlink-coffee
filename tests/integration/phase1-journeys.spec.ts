@@ -13,18 +13,113 @@ async function confirmAccount(page:Page,address:string){
  const {code}=await response.json();await page.goto('/auth/callback?code='+code);await expect(page).toHaveURL('/portal');
 }
 async function mfa(page:Page){
- await page.goto('/portal/security');await page.getByRole('button',{name:'Set up authenticator',exact:true}).click();
+ await page.goto('/portal/security');
+ await expect(page.getByText('MFA is unverified for this session.',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Set up authenticator',exact:true}).click();
  await expect(page.getByAltText('Scan this QR code using your authenticator app')).toBeVisible();await page.reload();
  await page.getByLabel('Authenticator code').fill('000000');await page.getByRole('button',{name:'Verify MFA',exact:true}).click();
  await expect(page.getByText('Code could not be verified. Try a new code.')).toBeVisible();
+ await expect(page.getByText('MFA is unverified for this session.',{exact:true})).toBeVisible();
  await page.getByLabel('Authenticator code').fill('123456');await page.getByRole('button',{name:'Verify MFA',exact:true}).click();
- await expect(page.getByText('MFA verified. Open the staff workspace to continue.')).toBeVisible();
+ await expect(page.getByText('Authenticator code accepted.',{exact:true})).toBeVisible();
+ await expect(page.getByText('MFA verified.',{exact:true})).toBeVisible();
+ await page.reload();
+ await expect(page.getByText('MFA verified.',{exact:true})).toBeVisible();
+ await expect(page.getByText('Authenticator code accepted.',{exact:true})).toHaveCount(0);
 }
 test.beforeEach(async({context})=>{
  await context.route('**/*',route=>{
   const url=new URL(route.request().url());
   return url.hostname==='127.0.0.1'&&['3102','54329'].includes(url.port)?route.continue():route.abort();
  });
+});
+
+test('header verifies signed-in state, isolates guests and supports keyboard sign-out', async ({page,browser}) => {
+ const header=page.getByRole('banner');
+ await page.goto('/');
+ await header.getByRole('link',{name:'Sign In',exact:true}).click();
+ await login(page,'alice@example.test');
+ await expect(header.getByRole('link',{name:'My Workspace',exact:true})).toBeVisible();
+ const response=await page.goto('/');
+ expect(response?.headers()['cache-control']).toContain('no-store');
+ await expect(header.getByRole('link',{name:'My Workspace',exact:true})).toBeVisible();
+ await expect(header.getByText('alice@example.test',{exact:true})).toBeHidden();
+ const guest=await browser.newContext({baseURL:'http://127.0.0.1:3102'});
+ try {
+  const guestPage=await guest.newPage();
+  await guestPage.goto('http://127.0.0.1:3102/');
+  await expect(guestPage.getByRole('banner').getByRole('link',{name:'Sign In',exact:true})).toBeVisible();
+  await expect(guestPage.getByRole('banner').getByRole('link',{name:'My Workspace',exact:true})).toHaveCount(0);
+  await expect(guestPage.getByRole('banner').getByText('alice@example.test',{exact:true})).toHaveCount(0);
+  await login(guestPage,'bob@example.test');
+  await guestPage.getByRole('banner').getByRole('button',{name:'Account',exact:true}).click();
+  await expect(guestPage.getByRole('banner').getByText('bob@example.test',{exact:true})).toBeVisible();
+  await expect(guestPage.getByRole('banner').getByText('alice@example.test',{exact:true})).toHaveCount(0);
+ } finally {
+  await guest.close();
+ }
+ await page.setViewportSize({width:375,height:812});
+ const account=header.getByRole('button',{name:'Account',exact:true});
+ await account.focus();
+ await page.keyboard.press('Enter');
+ await page.keyboard.press('Tab');
+ await expect(header.getByRole('navigation',{name:'Account actions'}).getByRole('link',{name:'My Workspace'})).toBeFocused();
+ await expect(header.getByText('alice@example.test',{exact:true})).toBeVisible();
+ await page.keyboard.press('Escape');
+ await expect(account).toBeFocused();
+ await expect(account).toHaveAttribute('aria-expanded','false');
+ await page.keyboard.press('Enter');
+ await header.getByRole('button',{name:'Sign Out',exact:true}).click();
+ await expect(page).toHaveURL('/auth/login');
+ await expect(header.getByRole('link',{name:'Sign In',exact:true})).toBeVisible();
+ await expect(header.getByText('alice@example.test',{exact:true})).toHaveCount(0);
+});
+
+test('account invite waits for explicit confirmation, sets a session and allows password setup', async ({page}) => {
+ const invite='/auth/invite/confirm#token_hash='+'a'.repeat(56);
+ const stats=async()=> (await (await page.request.get(fixture+'/_fixture/invite-stats')).json()).inviteVerifications;
+ const before=await stats();
+ await page.goto(invite);
+ await expect(page.getByRole('button',{name:'Confirm invitation'})).toBeVisible();
+ expect(await stats()).toBe(before);
+ expect(await page.content()).not.toContain('a'.repeat(56));
+ await page.getByRole('button',{name:'Confirm invitation'}).click();
+ await expect(page).toHaveURL('/auth/reset');
+ expect(await stats()).toBe(before+1);
+ const password='Synthetic-invited-password-456!';
+ await page.getByLabel('New password').fill(password);
+ await page.getByRole('button',{name:'Set new password'}).click();
+ await expect(page.getByRole('status')).toContainText('Password updated.');
+ await expect(page.getByRole('button',{name:'Set new password'})).toHaveCount(0);
+ await login(page,'unconfirmed@example.test',password);
+ await page.goto('/admin/verification');
+ await expect(page.getByRole('heading',{name:'Staff access required.'})).toBeVisible();
+ await page.goto(invite);
+ await page.getByRole('button',{name:'Confirm invitation'}).click();
+ await expect(page.getByRole('status')).toContainText('invalid, expired, or already used');
+});
+
+test('account invite rejects expired, missing, and cross-origin confirmations', async ({page}) => {
+ const hash='b'.repeat(56);
+ const stats=async()=> (await (await page.request.get(fixture+'/_fixture/invite-stats')).json()).inviteVerifications;
+ const before=await stats();
+ expect((await page.request.get('/auth/invite/accept')).status()).toBe(405);
+ expect((await page.request.post('/auth/invite/accept',{
+  headers:{origin:'https://untrusted.example','content-type':'text/plain'},data:hash,
+ })).status()).toBe(403);
+ expect((await page.request.post('/auth/invite/accept',{
+  headers:{origin:'http://127.0.0.1:3102','content-type':'text/plain'},data:'b'.repeat(64),
+ })).status()).toBe(400);
+ await page.goto('/auth/invite/confirm');
+ await page.getByRole('button',{name:'Confirm invitation'}).click();
+ await expect(page.getByRole('status')).toContainText('incomplete or invalid');
+ expect(await stats()).toBe(before);
+ await page.goto('/auth/invite/confirm#token_hash='+hash);
+ await page.reload();
+ await page.getByRole('button',{name:'Confirm invitation'}).click();
+ await expect(page.getByRole('status')).toContainText('invalid, expired, or already used');
+ expect(await stats()).toBe(before+1);
+ expect(new URL(page.url()).hash).toBe('');
 });
 
 test('full international buyer and Ethiopian supplier registration, independent MFA reviews and private document isolation',async({page,browser})=>{

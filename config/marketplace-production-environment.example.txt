@@ -1,0 +1,24 @@
+# TEMPLATE ONLY. Enter the publishable key privately in hosting settings.
+# This target reuses the approved staging project; public use needs owner approval.
+# Variables must be available to both build and server/functions as appropriate.
+NEXT_PUBLIC_SUPABASE_URL=https://fzgnepvhwhvxukuyubzk.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=REPLACE_PRIVATELY_WITH_PUBLISHABLE_KEY
+ETLINK_APP_URL=https://etlinkcoffee.com
+ETLINK_SYNTHETIC_TEST_MODE=false
+ETLINK_PHASE2_FIXTURE=false
+ETLINK_LOCAL_MVP_DEMO=false
+ETLINK_STAGING_VALIDATION=false
+# Set these true ONLY after their corresponding checks have passed.
+ETLINK_AUTH_PROVIDER_PROTECTION_REVIEWED=false
+ETLINK_PHASE2_ENABLED=false
+ETLINK_TRADING_APPROVED_APP_ORIGIN=https://etlinkcoffee.com
+ETLINK_TRADING_APPROVED_SUPABASE_ORIGIN=https://fzgnepvhwhvxukuyubzk.supabase.co
+ETLINK_NOTIFICATIONS_ENABLED=false
+ETLINK_TRANSACTIONAL_EMAIL_SEND_APPROVED=false
+# Do not deploy ETLINK_STAGING_TEST_SECRET_KEY or fixture test credentials.
+# Confidential upload validation and guest-ingress secrets require separate host setup.
+# Required for private verification-document uploads; server/functions scope ONLY.
+ETLINK_STORAGE_VALIDATOR_SECRET_KEY=
+# Optional guest inquiry ingress remains closed until a trusted edge signer is configured.
+# Authenticated buyer requests do not require guest ingress.
+# Never copy ETLINK_STAGING_TEST_SECRET_KEY to hosting.

@@ -1,0 +1,53 @@
+name: Release checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  local-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npx playwright install --with-deps chromium
+      - run: npm test
+      - run: npm run build -- --webpack
+      - run: npm run typecheck
+      - run: npm run check:credentials
+      # No deployment, hosted database connection, email or repository-write token.
+  netlify-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      NEXT_PUBLIC_SUPABASE_URL: https://fzgnepvhwhvxukuyubzk.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+      ETLINK_APP_URL: https://etlinkcoffee.com
+      ETLINK_AUTH_PROVIDER_PROTECTION_REVIEWED: 'true'
+      ETLINK_PHASE2_ENABLED: 'true'
+      ETLINK_TRADING_APPROVED_APP_ORIGIN: https://etlinkcoffee.com
+      ETLINK_TRADING_APPROVED_SUPABASE_ORIGIN: https://fzgnepvhwhvxukuyubzk.supabase.co
+      ETLINK_SYNTHETIC_TEST_MODE: 'false'
+      ETLINK_PHASE2_FIXTURE: 'false'
+      ETLINK_LOCAL_MVP_DEMO: 'false'
+      ETLINK_STAGING_VALIDATION: 'false'
+      ETLINK_NOTIFICATIONS_ENABLED: 'false'
+      ETLINK_TRANSACTIONAL_EMAIL_SEND_APPROVED: 'false'
+      NETLIFY_CLI_TELEMETRY_DISABLED: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: node scripts/check-marketplace-release-environment.mjs
+      - run: npm exec --yes --package=netlify-cli@27.17.0 --package=@netlify/plugin-nextjs@5.16.6 -- netlify build --offline --context production
+      # Build only: no deploy command, account token, artifacts or private server keys.

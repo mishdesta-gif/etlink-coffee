@@ -13,6 +13,7 @@ function fixture({failAt='',rpcError=null,thrown=new Error(marker)}={}){
  const maybe=stage=>{if(failAt===stage)throw thrown;};
  const db={rpc:async(name,args)=>{maybe('rpc');calls.push({name,args});return {data:'SYNTHETIC-REF',error:rpcError};},auth:{
   getSession:async()=>{maybe('session');return {data:{session:null}};},
+  getUser:async()=>{maybe('auth');return {data:{user:{email_confirmed_at:'synthetic-confirmed'}},error:null};},
   signInWithPassword:async()=>{maybe('login');return {data:{user:{email_confirmed_at:'synthetic-confirmed'}},error:null};},
   signUp:async()=>{maybe('register');return {data:{session:null},error:null};},
   resetPasswordForEmail:async()=>{maybe('forgot');return {error:null};},

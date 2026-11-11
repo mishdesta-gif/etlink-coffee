@@ -21,7 +21,8 @@ export function assertAuthProviderReady(config: Configuration): void {
 
 /** Optional local staging-validation restriction; never authorizes additional recipients. */
 export function assertStagingAuthEmail(mode:string,address:string,validation:boolean,allowedAddress:string|undefined):void {
-  if(validation&&['register','forgot'].includes(mode)&&address.toLowerCase()!==allowedAddress?.toLowerCase())throw new Error('Please use the approved staging test inbox.');
+  const approved=(allowedAddress||'').split(',').map(value=>value.trim().toLowerCase()).filter(Boolean);
+  if(validation&&['register','forgot'].includes(mode)&&!approved.includes(address.toLowerCase()))throw new Error('Please use the approved staging test inbox.');
 }
 
 /** Edge must strip inbound assertion headers and sign its observed socket address. */

@@ -75,3 +75,39 @@ test('Phase 2 preserves safe actionable permission, stale revision and commissio
 test('Phase 2 authentication exceptions fail closed without privileged RPC or private diagnostics',async()=>{
  const f=fixture({authThrow:true});const result=await f.run(form(commission()));assert.equal(result.ok,false);assert.equal(f.calls.length,0);assert.doesNotMatch(result.message,/private authentication/);
 });
+
+function record(domain, start='2099-01-01', end='2099-02-01', status='submitted'){
+ return form(new Map(Object.entries({operation:'save',domain,status,
+  business_id:'11111111-1111-4111-8111-111111111111',id:'22222222-2222-4222-8222-222222222222',revision:'0',
+  origin:'Guji',grade:'1',process:'washed',quantity:'1000',unit:'kg',price:domain==='lot'?'5':'',
+  currency:'USD',price_unit:'kg',trade_type:'international',incoterm:'FOB',destination:'Synthetic destination',
+  location:'Synthetic warehouse',window_start:start,window_end:end,specifications:'',packaging:'',sample_requirements:'',document_requirements:''})));
+}
+
+test('buyer requests and supplier stock reject reversed or impossible windows before RPC',async()=>{
+ for(const domain of ['request','lot']){
+  for(const [start,end] of [['2099-02-01','2099-01-01'],['2099-02-31','2099-03-01']]){
+   const f=fixture();const result=await f.run(record(domain,start,end));
+   assert.equal(result.ok,false);assert.equal(f.calls.length,0);
+  }
+ }
+});
+
+test('valid request and lot payloads preserve availability and withdrawal remains usable',async()=>{
+ for(const domain of ['request','lot']){
+  const f=fixture();assert.equal((await f.run(record(domain,'2028-02-29','2028-02-29'))).ok,true);
+  assert.equal(f.calls[0].args.p.window_start,'2028-02-29');assert.equal(f.calls[0].args.p.window_end,'2028-02-29');
+  const withdrawal=fixture();assert.equal((await withdrawal.run(record(domain,'','', 'withdrawn'))).ok,true);
+  assert.equal(Object.keys(withdrawal.calls[0].args.p).length,0);
+ }
+});
+
+test('buyer sample responses work without private staff logistics fields',async()=>{
+ for(const status of ['received','accepted','rejected']){
+  const f=fixture();
+  const input=form(new Map(Object.entries({operation:'sample_status',id:'11111111-1111-4111-8111-111111111111',revision:'2',next_status:status})));
+  assert.equal((await f.run(input)).ok,true);
+  assert.equal(f.calls[0].name,'update_coffee_sample');
+  assert.equal(f.calls[0].args.carrier_name,'');assert.equal(f.calls[0].args.tracking,'');
+ }
+});

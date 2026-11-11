@@ -15,7 +15,11 @@ export async function authenticate(_state: ActionState, form: FormData): Promise
     assertAuthProviderReady({appUrl:process.env.ETLINK_APP_URL,supabaseUrl:process.env.NEXT_PUBLIC_SUPABASE_URL,
       synthetic:process.env.ETLINK_SYNTHETIC_TEST_MODE,authProtectionReviewed:process.env.ETLINK_AUTH_PROVIDER_PROTECTION_REVIEWED});
     if (mode === 'reset') {
-      await authenticatedClient();
+      const { data: { user }, error: userError } = await db.auth.getUser();
+      if (userError && userError.name !== 'AuthSessionMissingError' && userError.status !== 401 && userError.status !== 403) throw userError;
+      if (userError || !user?.email_confirmed_at) {
+        return { ok:false, message:'This password setup session has ended. If you already saved your password, sign in. Otherwise, request a password recovery link.' };
+      }
       const { error } = await db.auth.updateUser({ password: password(form.get('password')) });
       if (error) return { ok:false, message:'Password could not be changed. Request a new recovery email and try again.' };
       passwordUpdated = true;
@@ -75,6 +79,6 @@ export async function mfa(_state: ActionState, form: FormData): Promise<ActionSt
     const code = field(form,'code',6,6);
     if (!/^\d{6}$/.test(code)) throw new Error('Enter the six-digit authenticator code.');
     const { error } = await db.auth.mfa.challengeAndVerify({ factorId,code });
-    return error ? { ok:false,message:'Code could not be verified. Try a new code.' } : { ok:true,message:'MFA verified. Open the staff workspace to continue.' };
+    return error ? { ok:false,message:'Code could not be verified. Try a new code.' } : { ok:true,message:'Authenticator code accepted.' };
   } catch { return { ok:false,message:'Sign in to set up or verify your authenticator.' }; }
 }

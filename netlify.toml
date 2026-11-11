@@ -1,0 +1,19 @@
+[build]
+  command = "npm run build:netlify"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "24"
+  NEXT_TELEMETRY_DISABLED = "1"
+  ETLINK_SYNTHETIC_TEST_MODE = "false"
+  ETLINK_PHASE2_FIXTURE = "false"
+  ETLINK_LOCAL_MVP_DEMO = "false"
+  ETLINK_STAGING_VALIDATION = "false"
+  ETLINK_NOTIFICATIONS_ENABLED = "false"
+  ETLINK_TRANSACTIONAL_EMAIL_SEND_APPROVED = "false"
+
+[[redirects]]
+  from = "https://www.etlinkcoffee.com/*"
+  to = "https://etlinkcoffee.com/:splat"
+  status = 301
+  force = true

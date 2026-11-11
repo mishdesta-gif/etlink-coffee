@@ -6,6 +6,9 @@ coverage/
 .env*
 !.env.example
 .vercel/
+.netlify/
+# Local audit evidence and operational snapshots; never publish to the public repo.
+review/
 .DS_Store
 npm-debug.log*
 review/phase1-baseline/**/*.bak
