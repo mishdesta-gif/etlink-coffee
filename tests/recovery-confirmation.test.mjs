@@ -7,6 +7,15 @@ import {NextResponse} from 'next/server.js';
 import {recoveryDestination} from '../src/lib/foundation/recovery-confirmation.ts';
 const provider='https://fzgnepvhwhvxukuyubzk.supabase.co',app='http://127.0.0.1:3103';
 function link(callback=app+'/auth/callback?next=reset') {const u=new URL(provider+'/auth/v1/verify');u.searchParams.set('token','a'.repeat(64));u.searchParams.set('type','recovery');u.searchParams.set('redirect_to',callback);return u;}
+
+test('private acceptance recovery stays bound to its exact application origin and rejects local or other-site callbacks',()=>{
+ const acceptance='https://calm-mochi-f4cd34.netlify.app';
+ const expected=link(acceptance+'/auth/callback?next=reset').href;
+ assert.equal(recoveryDestination(expected,provider,acceptance),expected);
+ assert.throws(()=>recoveryDestination(link().href,provider,acceptance));
+ assert.throws(()=>recoveryDestination(link('https://other.netlify.app/auth/callback?next=reset').href,provider,acceptance));
+ assert.throws(()=>recoveryDestination(expected,provider,app));
+});
 test('recovery destination allows only the bound provider and reset callback, preserving PKCE flow identifiers',()=>{
  for(const callback of [app+'/auth/callback?next=reset',app+'/auth/callback?next=reset&sb_flow_id=syntheticFlow123'])assert.equal(recoveryDestination(link(callback).href,provider,app),link(callback).href);
 });

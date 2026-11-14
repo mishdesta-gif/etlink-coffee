@@ -8,7 +8,7 @@ if(!result.pass){
  for(const failure of result.failures)console.error(failure);
  process.exitCode=1;
 }else{
- console.log('PASS: Canonical origin, real Supabase target, disabled fixtures and server credential boundaries.');
+ console.log('PASS: Approved application origin, real Supabase target, disabled fixtures and server credential boundaries.');
  const build=spawnSync(process.execPath,[path.resolve('node_modules/next/dist/bin/next'),'build','--webpack'],{stdio:'inherit',windowsHide:true});
  process.exitCode=build.status??1;
 }

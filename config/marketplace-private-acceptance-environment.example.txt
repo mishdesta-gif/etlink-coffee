@@ -1,0 +1,16 @@
+# PREPARATION ONLY. No hosted settings or gates have been activated.
+# Apply only after owner approval and verification of Netlify private visitor access.
+# Netlify Production context refers to its configured release branch, not public visibility.
+ETLINK_RELEASE_TARGET=private-acceptance
+ETLINK_APP_URL=https://calm-mochi-f4cd34.netlify.app
+ETLINK_TRADING_APPROVED_APP_ORIGIN=https://calm-mochi-f4cd34.netlify.app
+NEXT_PUBLIC_SUPABASE_URL=https://fzgnepvhwhvxukuyubzk.supabase.co
+ETLINK_TRADING_APPROVED_SUPABASE_ORIGIN=https://fzgnepvhwhvxukuyubzk.supabase.co
+# Keep these false until their independent review/activation is explicitly approved.
+ETLINK_PRIVATE_ACCESS_REVIEWED=false
+ETLINK_AUTH_PROVIDER_PROTECTION_REVIEWED=false
+ETLINK_PHASE2_ENABLED=false
+# Existing publishable key and secret-protected validator remain in Netlify, not here.
+# NETLIFY, CONTEXT, URL and BRANCH are Netlify-provided metadata: do not override them.
+# Keep fixture/demo modes and optional transactional notifications false.
+# Public cutover requires target=production, canonical origins and removal of private approval.

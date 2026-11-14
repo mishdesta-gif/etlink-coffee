@@ -4,8 +4,20 @@ import path from 'node:path';
 export function checkReleaseEnvironment(env) {
   const failures = [];
   const need = (condition, message) => { if (!condition) failures.push(message); };
+  const target=env.ETLINK_RELEASE_TARGET||'production';
+  const acceptance=target==='private-acceptance';
+  const acceptanceOrigin='https://calm-mochi-f4cd34.netlify.app';
+  need(target==='production'||acceptance,'Unknown release target rejected.');
   need(!env.CONTEXT||env.CONTEXT==='production','Deploy previews and branch publishing are disabled for this release.');
-  need(env.ETLINK_APP_URL==='https://etlinkcoffee.com','Canonical HTTPS application origin is required.');
+  need(env.ETLINK_APP_URL===(acceptance?acceptanceOrigin:'https://etlinkcoffee.com'),'Exact approved HTTPS application origin is required.');
+  if(acceptance){
+    need(env.NETLIFY==='true'&&env.CONTEXT==='production','Private acceptance requires the Netlify production deployment context.');
+    need(env.URL===acceptanceOrigin,'Assigned Netlify site URL must match the approved acceptance hostname.');
+    need(env.BRANCH==='codex/netlify-launch-20261111','Private acceptance requires the reviewed release branch.');
+    need(env.ETLINK_PRIVATE_ACCESS_REVIEWED==='true','Netlify private visitor access must be independently reviewed before acceptance.');
+  }else{
+    need(!env.ETLINK_PRIVATE_ACCESS_REVIEWED||env.ETLINK_PRIVATE_ACCESS_REVIEWED==='false','Private acceptance approval must be removed for public cutover.');
+  }
   need(env.NEXT_PUBLIC_SUPABASE_URL==='https://fzgnepvhwhvxukuyubzk.supabase.co','Approved Supabase project must match; another target requires release review.');
   need(env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.startsWith('sb_publishable_'),'A Supabase publishable client key is required.');
   for (const name of ['ETLINK_SYNTHETIC_TEST_MODE','ETLINK_PHASE2_FIXTURE','ETLINK_LOCAL_MVP_DEMO','ETLINK_STAGING_VALIDATION']) {
