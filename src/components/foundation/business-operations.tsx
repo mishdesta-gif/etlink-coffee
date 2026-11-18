@@ -38,7 +38,7 @@ export function BusinessOperations({data,businessId,role}:{data:Operations;busin
       {deal.delivery_confirmed && <p>Your business has confirmed delivery.</p>}
     </article>) : <p>No recorded deals yet.</p>}</section>
     <section><h2>Earned commissions and recorded payments</h2>{data.fees.length ? data.fees.map(fee => <article className="foundation-card" key={fee.id}>
-      <h3>{fee.reference}</h3><p>Earned {fee.amount} {fee.currency} · Recorded paid {fee.paid} {fee.currency} · Outstanding {outstandingAmount(fee.amount,fee.paid)} {fee.currency}</p>
+      <h3>{fee.reference}</h3><p>Total commission {fee.amount} {fee.currency} · Payable to date {fee.payable ?? fee.amount} · Recorded paid {fee.paid} {fee.currency} · Outstanding {outstandingAmount(fee.payable ?? fee.amount,fee.paid)} {fee.currency}</p>
     </article>) : <p>No commission has reached its agreed earning milestone.</p>}</section>
   </>;
 }

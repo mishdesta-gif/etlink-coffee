@@ -2,7 +2,9 @@ import fs from 'node:fs/promises';
 import {database,seedUsers,asUser,ids} from './database.mjs';
 export {asUser,ids};
 export const tradeInput=(extra={})=>({origin:'Guji',grade:'Grade 1',process:'washed',quantity:'100',unit:'feresula',price:'5',currency:'USD',price_unit:'kg',trade_type:'international',destination:'Hamburg',location:'Synthetic warehouse',window_start:'2099-01-01',window_end:'2099-02-01',specifications:'Synthetic quality requirements',packaging:'Synthetic bags',sample_requirements:'To be agreed; no reservation',document_requirements:'Synthetic documents',...extra});
-export async function tradingDatabase(){const db=await database();for(const name of (await fs.readdir('supabase/migrations')).filter(n=>n.includes('_phase2_')).sort())await db.exec(await fs.readFile('supabase/migrations/'+name,'utf8'));return db;}
+// Existing tests also exercise the preserved historical commission contract.
+// Launch-policy tests explicitly apply the additive launch migration afterwards.
+export async function tradingDatabase(){const db=await database();for(const name of (await fs.readdir('supabase/migrations')).filter(n=>n.includes('_phase2_')&&!n.includes('_launch_safeguards')).sort())await db.exec(await fs.readFile('supabase/migrations/'+name,'utf8'));return db;}
 export async function seedTrading(db,{approveBuyer=false,approveSupplier=true}={}){
  await seedUsers(db);await asUser(db,ids.alice);
  const buyer=(await db.query("select public.register_business('Synthetic buyer secret identity','Germany','overseas_buyer','buyer','Synthetic buyer registration data') as id")).rows[0].id;

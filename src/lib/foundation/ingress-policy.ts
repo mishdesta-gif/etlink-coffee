@@ -4,6 +4,12 @@ import { isIP } from 'node:net';
 export type IngressScope = 'inquiry';
 type Configuration = { appUrl?: string; supabaseUrl?: string; edgeSecret?: string; identitySecret?: string; synthetic?: string; authProtectionReviewed?: string };
 
+/** UI readiness only; signed assertions and database quotas remain mandatory on submission. */
+export function inquiryIntakeConfigured(config: Configuration, key?: string): boolean {
+  return Boolean(config.appUrl && config.supabaseUrl && key?.startsWith('sb_secret_') &&
+    (syntheticIngress(config) || ((config.edgeSecret?.length || 0) >= 32 && (config.identitySecret?.length || 0) >= 32)));
+}
+
 /** A test bypass is permitted only when BOTH services are explicitly loopback. */
 export function syntheticIngress(config: Configuration): boolean {
   try {

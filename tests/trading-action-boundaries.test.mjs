@@ -50,9 +50,16 @@ function fixture({rpcThrow=false,gateThrow=false,rpcError=null,authThrow=false}=
  return {calls,run:form=>exports.tradingMutation({},form)};
 }
 function commission(starts='2026-01-01',ends='2026-12-31'){
- return new Map(Object.entries({operation:'commission',match_id:'11111111-1111-4111-8111-111111111111',payer:'22222222-2222-4222-8222-222222222222',calculation:'percentage',amount:'5',currency:'USD',earning_trigger:'signed_sale_contract',effective_from:starts,expires_at:ends}));
+ return new Map(Object.entries({operation:'commission',match_id:'11111111-1111-4111-8111-111111111111',payer:'22222222-2222-4222-8222-222222222222',calculation:'percentage',amount:'1.5',currency:'USD',earning_trigger:'confirmed_delivery',effective_from:starts,expires_at:ends}));
 }
 function form(values){const f=new FormData();for(const [key,value]of values)f.set(key,value);return f;}
+
+test('launch commission action rejects fixed and out-of-range inputs before RPC',async()=>{
+ for(const [calculation,amount]of [['fixed','1'],['percentage','0.49'],['percentage','2.01']]){
+  const input=commission();input.set('calculation',calculation);input.set('amount',amount);
+  const f=fixture();const result=await f.run(form(input));assert.equal(result.ok,false);assert.equal(f.calls.length,0);
+ }
+});
 test('Phase 2 rejects impossible calendar dates before commission RPC instead of normalizing them',async()=>{
  for(const invalid of ['2026-02-29','2026-02-31','2026-04-31','0000-01-01','2026-13-01','2026-01-01T12:30']){
   const f=fixture();const result=await f.run(form(commission(invalid)));assert.equal(result.ok,false);assert.equal(f.calls.length,0,'Invalid date reached privileged RPC');assert.doesNotMatch(result.message,/Invalid time value/);
