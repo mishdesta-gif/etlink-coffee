@@ -1,38 +1,23 @@
-name: Release checks
+name: Package approved c44866d - no deployment
 on:
   push:
-  pull_request:
+    branches: [codex/package-c44866d]
 permissions:
   contents: read
 jobs:
-  local-validation:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
-      - run: npm run lint
-      - run: npx playwright install --with-deps chromium
-      - run: npm test
-      - run: npm run build -- --webpack
-      - run: npm run typecheck
-      - run: npm run check:credentials
-      # No deployment, hosted database connection, email or repository-write token.
-  netlify-package:
+  package-only:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
       NEXT_TELEMETRY_DISABLED: '1'
       NEXT_PUBLIC_SUPABASE_URL: https://fzgnepvhwhvxukuyubzk.supabase.co
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
-      ETLINK_APP_URL: https://etlinkcoffee.com
+      ETLINK_RELEASE_TARGET: private-acceptance
+      ETLINK_APP_URL: https://calm-mochi-f4cd34.netlify.app
       ETLINK_AUTH_PROVIDER_PROTECTION_REVIEWED: 'true'
+      ETLINK_PRIVATE_ACCESS_REVIEWED: 'true'
       ETLINK_PHASE2_ENABLED: 'false'
-      ETLINK_TRADING_APPROVED_APP_ORIGIN: https://etlinkcoffee.com
+      ETLINK_TRADING_APPROVED_APP_ORIGIN: https://calm-mochi-f4cd34.netlify.app
       ETLINK_TRADING_APPROVED_SUPABASE_ORIGIN: https://fzgnepvhwhvxukuyubzk.supabase.co
       ETLINK_SYNTHETIC_TEST_MODE: 'false'
       ETLINK_PHASE2_FIXTURE: 'false'
@@ -41,13 +26,51 @@ jobs:
       ETLINK_NOTIFICATIONS_ENABLED: 'false'
       ETLINK_TRANSACTIONAL_EMAIL_SEND_APPROVED: 'false'
       NETLIFY_CLI_TELEMETRY_DISABLED: 'true'
+      NETLIFY: 'true'
+      CONTEXT: production
+      URL: https://calm-mochi-f4cd34.netlify.app
+      # This names the verified source release, not a deployment of this workflow branch.
+      BRANCH: codex/netlify-launch-20261111
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: c44866d0fa0fbdd4d975e08d867f5d8739f18208
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: npm
+      - name: Verify exact clean source
+        run: |
+          test "$(git rev-parse HEAD)" = c44866d0fa0fbdd4d975e08d867f5d8739f18208
+          test -z "$(git status --porcelain)"
+          test ! -e .netlify
+          test ! -e .env.local
       - run: npm ci
-      - run: node scripts/check-marketplace-release-environment.mjs
       - run: npm exec --yes --package=netlify-cli@27.17.0 --package=@netlify/plugin-nextjs@5.16.6 -- netlify build --offline --context production
-      # Build only: no deploy command, account token, artifacts or private server keys.
+      - name: Package fresh output with provenance
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const manifest=JSON.parse(fs.readFileSync('.netlify/functions/manifest.json'));
+          assert.equal(manifest.system.platform,'linux');
+          assert(manifest.functions.some(f=>f.name==='___netlify-server-handler'));
+          for(const f of manifest.functions)assert(fs.statSync(f.path).size>0);
+          const edge=JSON.parse(fs.readFileSync('.netlify/edge-functions/manifest.json'));
+          assert(JSON.stringify(edge).includes('contact-ingress'));
+          assert.equal(process.env.ETLINK_PHASE2_ENABLED,'false');
+          fs.mkdirSync('release-output');
+          fs.writeFileSync('release-output/provenance.json',JSON.stringify({source:'c44866d0fa0fbdd4d975e08d867f5d8739f18208',sourceBranch:'codex/netlify-launch-20261111',target:'calm-mochi-f4cd34',origin:process.env.ETLINK_APP_URL,tradingEnabled:false,cli:'27.17.0',adapter:'5.16.6',platform:process.platform,workspace:process.cwd(),functions:manifest.functions.map(f=>f.name),containsRuntimeSecrets:false},null,2));
+          NODE
+          tar --dereference --exclude='.next/cache' --exclude='.netlify/plugins' -czf release-output/c44866d-netlify-linux.tar.gz .netlify .next netlify netlify.toml package.json package-lock.json
+          cd release-output
+          sha256sum c44866d-netlify-linux.tar.gz provenance.json > SHA256SUMS
+          sha256sum --check SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: etlink-c44866d-netlify-linux
+          path: release-output/
+          retention-days: 3
+          if-no-files-found: error
+      # No deployment token, privileged key, hosted writes or configuration changes.
