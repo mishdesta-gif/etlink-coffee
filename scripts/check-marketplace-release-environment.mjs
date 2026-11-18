@@ -24,7 +24,8 @@ export function checkReleaseEnvironment(env) {
     need(!env[name] || env[name]==='false',name+' must be false or absent.');
   }
   need(env.ETLINK_AUTH_PROVIDER_PROTECTION_REVIEWED==='true','Provider Auth protection must be verified before enabling account actions.');
-  need(env.ETLINK_PHASE2_ENABLED==='true','Marketplace release requires reviewed migrations and explicit activation.');
+  // Compilation is not marketplace activation. Runtime requireTrading remains fail-closed.
+  need(env.ETLINK_PHASE2_ENABLED===undefined||env.ETLINK_PHASE2_ENABLED==='false'||env.ETLINK_PHASE2_ENABLED==='true','Marketplace activation must be absent, false or explicitly true.');
   need(env.ETLINK_TRADING_APPROVED_APP_ORIGIN===env.ETLINK_APP_URL,'Trading application approval must match.');
   need(env.ETLINK_TRADING_APPROVED_SUPABASE_ORIGIN===env.NEXT_PUBLIC_SUPABASE_URL,'Trading database approval must match.');
   need(!env.ETLINK_STAGING_TEST_SECRET_KEY,'Staging administrator test credentials must not be deployed.');

@@ -31,7 +31,7 @@ jobs:
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
       ETLINK_APP_URL: https://etlinkcoffee.com
       ETLINK_AUTH_PROVIDER_PROTECTION_REVIEWED: 'true'
-      ETLINK_PHASE2_ENABLED: 'true'
+      ETLINK_PHASE2_ENABLED: 'false'
       ETLINK_TRADING_APPROVED_APP_ORIGIN: https://etlinkcoffee.com
       ETLINK_TRADING_APPROVED_SUPABASE_ORIGIN: https://fzgnepvhwhvxukuyubzk.supabase.co
       ETLINK_SYNTHETIC_TEST_MODE: 'false'

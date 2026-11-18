@@ -2,6 +2,8 @@
 
 Status: locally validated; BLOCKED for public release pending the controlled hosted operation below. No hosted changes were performed to create this candidate. Existing private preview: https://calm-mochi-f4cd34.netlify.app (previous deployment, not this candidate).
 
+Follow-up: build validation now accepts ETLINK_PHASE2_ENABLED=false or absent, independently of runtime activation. Ambiguous flag values fail validation. Runtime tradingAvailable/requireTrading, database permissions and commission rules are unchanged. The production build passed with false; focused release/action tests (15), lint and TypeScript passed. Linux packaging now explicitly tests false. Transactional hosted acceptance requires separately authorized runtime activation; successful compilation does not authorize it. Four fresh anonymous requests to the existing Netlify hostname returned Netlify HTTP 401. No new deployment was made by these checks.
+
 ## Changes and evidence
 
 - Existing buyer/supplier registration, verification, private requests/inventory, manual matching, separate offers, negotiations, samples, allocation, reservation, deals, notifications and documents are retained. Prior real staging acceptance is reused; it does not prove these new changes have passed hosted acceptance.

@@ -39,7 +39,7 @@ test('private acceptance permits only the exact reviewed Netlify site and branch
     {URL:'https://other.netlify.app'},{URL:undefined},{NETLIFY:undefined},
     {CONTEXT:'deploy-preview'},{CONTEXT:'branch-deploy'},{CONTEXT:undefined},
     {BRANCH:'main'},{BRANCH:undefined},{ETLINK_PRIVATE_ACCESS_REVIEWED:'false'},
-    {ETLINK_AUTH_PROVIDER_PROTECTION_REVIEWED:'false'},{ETLINK_PHASE2_ENABLED:'false'},
+    {ETLINK_AUTH_PROVIDER_PROTECTION_REVIEWED:'false'},{ETLINK_PHASE2_ENABLED:'TRUE'},
     {NEXT_PUBLIC_SUPABASE_URL:'https://other.supabase.co'},
     {ETLINK_TRADING_APPROVED_APP_ORIGIN:'https://etlinkcoffee.com'},
     {ETLINK_STAGING_TEST_SECRET_KEY:'synthetic-test-secret'},
@@ -51,4 +51,11 @@ test('production stays canonical and rejects leftover acceptance approval or arb
   assert.equal(checkReleaseEnvironment({...env,ETLINK_RELEASE_TARGET:'production'}).pass,true);
   assert.equal(checkReleaseEnvironment({...env,ETLINK_PRIVATE_ACCESS_REVIEWED:'true'}).pass,false);
   assert.equal(checkReleaseEnvironment({...env,ETLINK_APP_URL:privateAcceptance.ETLINK_APP_URL}).pass,false);
+});
+
+test('build approval is independent from runtime trading activation and rejects ambiguous values',()=>{
+  for(const target of [env,privateAcceptance]){
+    for(const value of [undefined,'false','true'])assert.equal(checkReleaseEnvironment({...target,ETLINK_PHASE2_ENABLED:value}).pass,true);
+    for(const value of ['', '1','TRUE','yes'])assert.equal(checkReleaseEnvironment({...target,ETLINK_PHASE2_ENABLED:value}).pass,false);
+  }
 });
