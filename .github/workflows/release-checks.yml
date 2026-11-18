@@ -57,7 +57,7 @@ jobs:
           assert.equal(manifest.system.platform,'linux');
           assert(manifest.functions.some(f=>f.name==='___netlify-server-handler'));
           for(const f of manifest.functions)assert(fs.statSync(f.path).size>0);
-          const edge=JSON.parse(fs.readFileSync('.netlify/edge-functions/manifest.json'));
+          const edge=JSON.parse(fs.readFileSync('.netlify/edge-functions-dist/manifest.json'));
           assert(JSON.stringify(edge).includes('contact-ingress'));
           assert.equal(process.env.ETLINK_PHASE2_ENABLED,'false');
           fs.mkdirSync('release-output');
