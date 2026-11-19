@@ -66,7 +66,26 @@ export async function fulfillmentJourney(buyer:Page,supplier:Page,admin:Page) {
     await deal.getByRole('button',{name:'Record deal milestone',exact:true}).click();
     await expect(deal.locator('.foundation-status')).toContainText(status.replaceAll('_',' '));
   }
-  for (const status of ['confirmed','contract_signed','in_transit','delivered']) await advance(status);
+  for (const status of ['confirmed','contract_signed']) await advance(status);
+  await admin.goto('/admin/operations');
+  await expect(admin.getByRole('heading',{name:/^FEE-/})).toHaveCount(0);
+  async function recordPaymentMilestone(milestone:string) {
+    const form=admin.locator('form').filter({has:admin.getByRole('button',{name:'Record supplier payment milestone',exact:true})});
+    await form.locator('select[name=milestone]').selectOption(milestone);
+    await form.getByLabel('Supplier payment evidence reference').fill('SYNTHETIC-SUPPLIER-'+milestone);
+    if(milestone==='export_and_final_payment')await form.getByLabel('Export evidence reference (required for final milestone)').fill('SYNTHETIC-EXPORT-COMPLETE');
+    await form.getByRole('button',{name:'Record supplier payment milestone',exact:true}).click();
+    await form.getByRole('status').filter({hasText:'Marketplace status updated.'}).waitFor();
+    await admin.reload();
+  }
+  await recordPaymentMilestone('supplier_first_payment');
+  const firstFee=admin.locator('article.foundation-card').filter({has:admin.getByRole('heading',{name:/^FEE-/})});
+  await expect(firstFee.getByText(/Payable to date 22.500000/)).toBeVisible();
+  await firstFee.getByLabel('Received amount (USD)').fill('22.5');
+  await firstFee.getByLabel('External payment reference').fill('SYNTHETIC-FIRST-30-PERCENT');
+  await firstFee.getByRole('button',{name:'Record received commission payment',exact:true}).click();
+  await expect(firstFee.getByText(/Outstanding 0/)).toBeVisible();
+  for (const status of ['in_transit','delivered']) await advance(status);
   for (const page of [buyer,supplier]) {
     await page.goto('/portal/trading/operations');
     const deal = page.locator('article.foundation-card').filter({has:page.getByRole('heading',{name:/^DEAL-/})});
@@ -76,8 +95,9 @@ export async function fulfillmentJourney(buyer:Page,supplier:Page,admin:Page) {
   }
   await advance('completed');
   await admin.goto('/admin/operations');
+  await recordPaymentMilestone('export_and_final_payment');
   const fee = admin.locator('article.foundation-card').filter({has:admin.getByRole('heading',{name:/^FEE-/})});
-  await fee.getByLabel('Received amount (USD)').fill('337.5');
+  await fee.getByLabel('Received amount (USD)').fill('52.5');
   await fee.getByLabel('External payment reference').fill('SYNTHETIC-BROWSER-PAYMENT-001');
   await fee.getByRole('button',{name:'Record received commission payment',exact:true}).click();
   await expect(fee.getByText(/Outstanding 0/)).toBeVisible();
@@ -87,7 +107,8 @@ export async function fulfillmentJourney(buyer:Page,supplier:Page,admin:Page) {
     const html = await page.content();
     expect(html).not.toContain('SYNTHETIC-PRIVATE-MILESTONE');
     expect(html).not.toContain(page===buyer?'SYNTHETIC — Ethiopian Supplier':'SYNTHETIC — Guji Importer');
-    if (page===buyer) await expect(page.getByText(/Outstanding 0 USD/)).toBeVisible();
+    if (page===supplier) await expect(page.getByText(/Outstanding 0 USD/)).toBeVisible();
+    else await expect(page.getByRole('heading',{name:/^FEE-/})).toHaveCount(0);
     await page.setViewportSize({width:390,height:844});
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   }

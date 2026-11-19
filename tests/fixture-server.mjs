@@ -1,6 +1,7 @@
 // TEST ONLY. A loopback Auth/REST contract fixture backed by the migrated PGlite database.
 // This verifies application wiring; it is not Supabase Auth, Storage, or an email provider.
 import http from 'node:http';
+import fs from 'node:fs/promises';
 import { randomUUID,randomBytes,createHmac,createHash } from 'node:crypto';
 import { database,asUser,ids,seedUsers } from './database.mjs';
 import {tradingDatabase} from './trading-database.mjs';
@@ -14,6 +15,7 @@ if(localDemo&&(!tradingOnly||process.env.NEXT_PUBLIC_SUPABASE_URL!=='http://127.
 const tradingScenario=tradingOnly?process.env.ETLINK_TRADING_SCENARIO||'international':'international';
 if(tradingOnly&&inquiryOnly)throw new Error('Fixture modes must be isolated');
 const db=tradingOnly?await tradingDatabase():await database();
+if(tradingOnly)await db.exec(await fs.readFile('supabase/migrations/20261118142516_phase2_launch_safeguards.sql','utf8'));
 if(inquiryOnly){for(const id of [ids.alice,ids.bob,ids.reviewer,ids.support]){const name=Object.keys(ids).find(k=>ids[k]===id);await db.query('insert into auth.users(id,email,email_confirmed_at) values($1,$2,now())',[id,`${name}@example.test`]);await db.query('insert into auth.sessions(id,user_id) values($1,$1)',[id]);}}else await seedUsers(db);
 const accounts=new Map();const sessions=new Map();const codes=new Map();const objects=new Map();
 const recoveries=new Map();let failLogout=false;
@@ -30,7 +32,7 @@ else await db.query("insert into public.staff_grants(user_id,permission) values(
 if(tradingOnly)await db.query("insert into public.staff_grants(user_id,permission) select $1,unnest(array['trading.requests.review','trading.lots.review','trading.matches.manage','trading.offers.issue','trading.commissions.manage'])",[ids.reviewer]);
 if(localDemo){
  const records=await seedLocalMarketplace(db,importer,supplier);
- const quotes=await preparePrivateQuotes(db,{buyer:importer,supplier,...records});
+ const quotes=await preparePrivateQuotes(db,{buyer:importer,supplier,...records,launchPolicy:true});
  await asUser(db,ids.alice);await db.query('select public.request_coffee_sample($1,1,$2,300)',[quotes.buyerOffer,randomUUID()]);await db.exec('reset role');
 }
 let emailRequests=0;

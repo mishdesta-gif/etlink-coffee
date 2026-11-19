@@ -2,11 +2,11 @@ import { randomUUID } from 'node:crypto';
 import { asUser, ids } from '../database.mjs';
 import { tradingDatabase, seedTrading, tradeInput } from '../trading-database.mjs';
 
-export async function preparePrivateQuotes(db, { buyer, supplier, request, lot }) {
+export async function preparePrivateQuotes(db, { buyer, supplier, request, lot, launchPolicy = false }) {
   await asUser(db, ids.reviewer, 'aal2');
   const match = (await db.query('select public.approve_trade_match($1,3,$2,3,$3) as id', [request, lot, 'Synthetic manual selection of current verified sources.'])).rows[0].id;
   const terms = [];
-  for (const [business, calculation, amount, trigger] of [[buyer, 'percentage', 5, 'signed_sale_contract'], [supplier, 'fixed', 20, 'confirmed_delivery']]) {
+  for (const [business, calculation, amount, trigger] of (launchPolicy ? [[supplier, 'percentage', 1.5, 'confirmed_delivery']] : [[buyer, 'percentage', 5, 'signed_sale_contract'], [supplier, 'fixed', 20, 'confirmed_delivery']])) {
     await asUser(db, ids.reviewer, 'aal2');
     const id = (await db.query('select public.create_commission_terms($1,$2,$3,$4,$5,$6,$7,$8) as id', [match, business, calculation, amount, 'USD', trigger, new Date(Date.now() - 60000).toISOString(), new Date(Date.now() + 7 * 86400000).toISOString()])).rows[0].id;
     await asUser(db, business === buyer ? ids.alice : ids.bob);
